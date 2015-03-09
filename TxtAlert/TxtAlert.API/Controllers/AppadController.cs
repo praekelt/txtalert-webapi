@@ -59,5 +59,43 @@ namespace TxtAlert.API.Controllers
                 }
             }
         }
+
+        [HttpGet]
+        public IEnumerable<Appad> PatientList()
+        {
+            MySqlConnection connection = new MySqlConnection(connString);
+            MySqlCommand cmd;
+            connection.Open();
+
+            try
+            {
+                cmd = connection.CreateCommand();
+                cmd.CommandText = "SELECT Ptd_No, File_No, Cellphone_number, Facility_name  FROM txtalertdb.p_appad GROUP BY Ptd_No";
+                MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
+                DataSet ds = new DataSet();
+                adap.Fill(ds);
+
+                IEnumerable<Appad> patients = ds.Tables[0].AsEnumerable().Select(x => new Appad
+                {
+                    Ptd_No = x.Field<string>("Ptd_No"),
+                    File_No = x.Field<string>("File_No"),
+                    Cellphone_number = x.Field<string>("Cellphone_number"),
+                    Facility_name = x.Field<string>("Facility_name")
+                });
+
+                return patients;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                if (connection.State == System.Data.ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+        }
     }
 }
