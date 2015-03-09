@@ -132,6 +132,17 @@ namespace TxtAlert.API.Controllers
             return GetByStatus(dateFrom, dateTo, status, dateField);
         }
 
+        // RescheduledVisits returns appointments that were rescheduled:
+        // -- We assume that there will be a status equal to 'R' to signify this change
+        [HttpGet]
+        public IEnumerable<Appad> RescheduledVisits(DateTime dateFrom, DateTime dateTo)
+        {
+            string status = "Status = 'R'";
+            string dateField = "Next_tcb";
+
+            return GetByStatus(dateFrom, dateTo, status, dateField);
+        }
+
         private IEnumerable<Appad> GetByStatus(DateTime dateFrom, DateTime dateTo, string status, string dateField)
         {
 
