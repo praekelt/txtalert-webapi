@@ -143,6 +143,17 @@ namespace TxtAlert.API.Controllers
             return GetByStatus(dateFrom, dateTo, status, dateField);
         }
 
+        // DeletedVisits returns appointments that were deleted:
+        // -- We assume that there will be a status equal to 'D' to signify this change
+        [HttpGet]
+        public IEnumerable<Appad> DeletedVisits(DateTime dateFrom, DateTime dateTo)
+        {
+            string status = "Status = 'D'";
+            string dateField = "Next_tcb";
+
+            return GetByStatus(dateFrom, dateTo, status, dateField);
+        }
+
         private IEnumerable<Appad> GetByStatus(DateTime dateFrom, DateTime dateTo, string status, string dateField)
         {
 
