@@ -123,6 +123,15 @@ namespace TxtAlert.API.Controllers
             return GetByStatus(dateFrom, dateTo, status, dateField);
         }
 
+        [HttpGet]
+        public IEnumerable<Appad> DoneVisits(DateTime dateFrom, DateTime dateTo)
+        {
+            string status = "Status = 'A' or Status = 'AE'";
+            string dateField = "Return_date";
+
+            return GetByStatus(dateFrom, dateTo, status, dateField);
+        }
+
         private IEnumerable<Appad> GetByStatus(DateTime dateFrom, DateTime dateTo, string status, string dateField)
         {
 
