@@ -114,6 +114,51 @@ namespace TxtAlert.API.Controllers
             }
         }
 
+        private IEnumerable<Appad> GetByStatus(DateTime dateFrom, DateTime dateTo, string status, string dateField)
+        {
+
+            MySqlConnection connection = new MySqlConnection(connString);
+            MySqlCommand cmd;
+            connection.Open();
+
+            try
+            {
+                cmd = connection.CreateCommand();
+                cmd.CommandText = @"SELECT 
+                                        * 
+                                    FROM 
+                                        txtalertdb.p_appad 
+                                    WHERE 
+                                        (" + status + @")
+                                    AND 
+                                        NOT ISNULL(" + dateField + @")
+                                    AND
+                                        " + dateField + @"
+                                            BETWEEN 
+                                                @dateFrom 
+                                            AND 
+                                                @dateTo
+                                    ORDER BY
+                                        " + dateField + " DESC";
+
+                cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+                cmd.Parameters.AddWithValue("@dateTo", dateTo);
+
+                return ExecuteQuery(cmd);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                if (connection.State == System.Data.ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+        }
+
         private IEnumerable<Appad> ExecuteQuery(MySqlCommand cmd)
         {
             MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
