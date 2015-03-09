@@ -14,8 +14,8 @@ namespace TxtAlert.API.Controllers
     {
         readonly string connString = Properties.Settings.Default.ConnectionString;
 
-        [HttpGet]
-        public IEnumerable<Appad> GetAppad()
+        [HttpGet, ActionName("DefaultCall")]
+        public IEnumerable<Appad> Get()
         {
             MySqlConnection connection = new MySqlConnection(connString);
             MySqlCommand cmd;
