@@ -114,6 +114,15 @@ namespace TxtAlert.API.Controllers
             }
         }
 
+        [HttpGet]
+        public IEnumerable<Appad> MissedVisits(DateTime dateFrom, DateTime dateTo)
+        {
+            string status = "Status = 'M'";
+            string dateField = "Next_tcb";
+
+            return GetByStatus(dateFrom, dateTo, status, dateField);
+        }
+
         private IEnumerable<Appad> GetByStatus(DateTime dateFrom, DateTime dateTo, string status, string dateField)
         {
 
