@@ -17,6 +17,12 @@ namespace TxtAlert.API.Controllers
         [HttpGet, ActionName("DefaultCall")]
         public IEnumerable<CD4> Get()
         {
+            string query = "SELECT * FROM p_cd4_recruit";
+            return ExecuteQuery(query);
+        }
+
+        private IEnumerable<CD4> ExecuteQuery(string query)
+        {
             MySqlConnection connection = new MySqlConnection(connString);
             MySqlCommand cmd;
             connection.Open();
@@ -24,9 +30,22 @@ namespace TxtAlert.API.Controllers
             try
             {
                 cmd = connection.CreateCommand();
-                cmd.CommandText = @"SELECT * FROM txtalertdb.p_cd4_recruit";
+                cmd.CommandText = query;
 
-                return ExecuteQuery(cmd);
+                MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
+                DataSet ds = new DataSet();
+                adap.Fill(ds);
+
+                IEnumerable<CD4> results = ds.Tables[0].AsEnumerable().Select(x => new CD4
+                {
+                    LAB_ID = x.Field<string>("LAB_ID"),
+                    FACILITY = x.Field<string>("FACILITY"),
+                    CELL_NUM = x.Field<string>("CELL_NUM"),
+                    CD4_VALUE = x.Field<int?>("CD4_VALUE"),
+                    ENROLMENT_DATE = x.Field<DateTime?>("ENROLMENT_DATE")
+                });
+
+                return results;
             }
             catch (Exception)
             {
@@ -39,24 +58,6 @@ namespace TxtAlert.API.Controllers
                     connection.Close();
                 }
             }
-        }
-
-        private IEnumerable<CD4> ExecuteQuery(MySqlCommand cmd)
-        {
-            MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
-            DataSet ds = new DataSet();
-            adap.Fill(ds);
-
-            IEnumerable<CD4> results = ds.Tables[0].AsEnumerable().Select(x => new CD4
-            {
-                LAB_ID = x.Field<string>("LAB_ID"),
-                FACILITY = x.Field<string>("FACILITY"),
-                CELL_NUM = x.Field<string>("CELL_NUM"),
-                CD4_VALUE = x.Field<int?>("CD4_VALUE"),
-                ENROLMENT_DATE = x.Field<DateTime?>("ENROLMENT_DATE")
-            });
-
-            return results;
         }
     }
 }
