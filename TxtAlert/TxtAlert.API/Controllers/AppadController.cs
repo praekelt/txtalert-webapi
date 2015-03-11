@@ -89,15 +89,29 @@ namespace TxtAlert.API.Controllers
             return ExecuteQuery(query);
         }
 
-        // RescheduledVisits returns appointments that were rescheduled:
-        // -- We assume that there will be a status equal to 'R' to signify this change
         [HttpGet]
         public IEnumerable<Appad> RescheduledVisits(DateTime dateFrom, DateTime dateTo)
         {
-            string status = "Status = 'R'";
-            string dateField = "Next_tcb";
+            string query = @"SELECT
+                                * 
+                            FROM 
+                                p_appad
+                            WHERE
+                                Visit_date < Return_date
+                            AND
+                                Return_date
+                                    BETWEEN
+                                        '" + dateFrom + @"'
+                                    AND 
+                                        '" + dateTo + @"
+                            AND 
+                                Status <> 'M'
+                            ORDER BY 
+                                Ptd_No, 
+                                Next_tcb DESC";
 
-            return GetByStatus(dateFrom, dateTo, status, dateField);
+
+            return ExecuteQuery(query);
         }
 
         // DeletedVisits returns appointments that were deleted:
