@@ -58,7 +58,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> MissedVisits(DateTime dateFrom, DateTime dateTo)
+        public IEnumerable<Appad> MissedVisits(string dateFrom, string dateTo)
         {
             string query = @"SELECT 
                                 * 
@@ -81,7 +81,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> DoneVisits(DateTime dateFrom, DateTime dateTo)
+        public IEnumerable<Appad> DoneVisits(string dateFrom, string dateTo)
         {
             string query = @"SELECT 
                                 * 
@@ -104,7 +104,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> RescheduledVisits(DateTime dateFrom, DateTime dateTo)
+        public IEnumerable<Appad> RescheduledVisits(string dateFrom, string dateTo)
         {
             string query = @"SELECT
                                 * 
@@ -124,19 +124,31 @@ namespace TxtAlert.API.Controllers
                                 Ptd_No, 
                                 Next_tcb DESC";
 
-
             return ExecuteQuery(query);
         }
 
-        // DeletedVisits returns appointments that were deleted:
-        // -- We assume that there will be a status equal to 'D' to signify this change
         [HttpGet]
-        public IEnumerable<Appad> DeletedVisits(DateTime dateFrom, DateTime dateTo)
+        public IEnumerable<Appad> DeletedVisits(string dateFrom, string dateTo)
         {
-            string status = "Status = 'D'";
-            string dateField = "Next_tcb";
+            string query = @"SELECT
+                                * 
+                            FROM 
+                                p_appad
+                            WHERE
+                                ISNULL(Return_date)
+                            AND 
+                                Status <> 'M'
+                            AND
+                                Visit_date
+                                    BETWEEN
+                                        '" + dateFrom + @"'
+                                    AND 
+                                        '" + dateTo + @"
+                            ORDER BY 
+                                Ptd_No, 
+                                Next_tcb DESC";
 
-            return GetByStatus(dateFrom, dateTo, status, dateField);
+            return ExecuteQuery(query);
         }
 
         private IEnumerable<Appad> GetByStatus(DateTime dateFrom, DateTime dateTo, string status, string dateField)
