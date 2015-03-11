@@ -21,6 +21,25 @@ namespace TxtAlert.API.Controllers
             return ExecuteQuery(query);
         }
 
+        [HttpGet]
+        public IEnumerable<CD4> CD4Counts(string dateFrom, string dateTo)
+        {
+            string query = @"SELECT 
+                    * 
+                FROM 
+                    p_cd4_recruit
+                WHERE 
+                    ENROLMENT_DATE 
+                        BETWEEN 
+                            '" + dateFrom + @"'
+                        AND
+                            '" + dateTo + @"'
+                GROUP BY 
+                    LAB_ID";
+
+            return ExecuteQuery(query);
+        }
+
         private IEnumerable<CD4> ExecuteQuery(string query)
         {
             MySqlConnection connection = new MySqlConnection(connString);
@@ -40,7 +59,7 @@ namespace TxtAlert.API.Controllers
                 {
                     LAB_ID = x.Field<string>("LAB_ID"),
                     FACILITY = x.Field<string>("FACILITY"),
-                    CELL_NUM = x.Field<string>("CELL_NUM"),
+                    CELL_NUM = x.Field<int?>("CELL_NUM"),
                     CD4_VALUE = x.Field<int?>("CD4_VALUE"),
                     ENROLMENT_DATE = x.Field<DateTime?>("ENROLMENT_DATE")
                 });
