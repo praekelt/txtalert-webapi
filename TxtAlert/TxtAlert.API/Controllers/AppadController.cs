@@ -26,7 +26,7 @@ namespace TxtAlert.API.Controllers
                 cmd = connection.CreateCommand();
                 cmd.CommandText = @"SELECT * FROM txtalertdb.p_appad";
 
-                return ExecuteQuery(cmd);
+                return null;
             }
             catch (Exception)
             {
@@ -58,7 +58,7 @@ namespace TxtAlert.API.Controllers
                                     GROUP BY 
                                         Ptd_No";
 
-                return ExecuteQuery(cmd);
+                return null;
             }
             catch (Exception)
             {
@@ -74,44 +74,23 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> ComingVisits(DateTime dateFrom, DateTime dateTo)
+        public IEnumerable<Appad> ComingVisits(string dateFrom, string dateTo)
         {
-            MySqlConnection connection = new MySqlConnection(connString);
-            MySqlCommand cmd;
-            connection.Open();
-
-            try
-            {
-                cmd = connection.CreateCommand();
-                cmd.CommandText = @"SELECT 
-                                        * 
-                                    FROM 
-                                        txtalertdb.p_appad 
-                                    WHERE 
-                                        Next_tcb > NOW() 
+            string query = @"SELECT * FROM p_appad
+                            WHERE 
+                                NOT ISNULL(Next_tcb)
+                            AND
+                                Next_tcb
+                                    BETWEEN 
+                                        '" + dateFrom + @"'
                                     AND 
-                                        Next_tcb
-                                            BETWEEN 
-                                                @dateFrom 
-                                            AND 
-                                                @dateTo";
+                                        '" + dateTo + @"'
+                            GROUP BY 
+                                Ptd_No
+                            ORDER BY 
+                                Next_tcb DESC";
 
-                cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
-                cmd.Parameters.AddWithValue("@dateTo", dateTo);
-
-                return ExecuteQuery(cmd);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                if (connection.State == System.Data.ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
+            return ExecuteQuery(query);
         }
 
         [HttpGet]
@@ -184,7 +163,7 @@ namespace TxtAlert.API.Controllers
                 cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
                 cmd.Parameters.AddWithValue("@dateTo", dateTo);
 
-                return ExecuteQuery(cmd);
+                return null;
             }
             catch (Exception)
             {
@@ -199,28 +178,49 @@ namespace TxtAlert.API.Controllers
             }
         }
 
-        private IEnumerable<Appad> ExecuteQuery(MySqlCommand cmd)
+        private IEnumerable<Appad> ExecuteQuery(string query)
         {
-            MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
-            DataSet ds = new DataSet();
-            adap.Fill(ds);
+            MySqlConnection connection = new MySqlConnection(connString);
+            MySqlCommand cmd;
+            connection.Open();
 
-            IEnumerable<Appad> results = ds.Tables[0].AsEnumerable().Select(x => new Appad
+            try
             {
-                Ptd_No = x.Field<string>("Ptd_No"),
-                Visit = x.Field<double>("Visit"),
-                Return_date = x.Field<DateTime?>("Return_date"),
-                Visit_date = x.Field<DateTime?>("Visit_date"),
-                Status = x.Field<string>("Status"),
-                Received_sms = x.Field<string>("Received_sms"),
-                Data_Extraction = x.Field<string>("Data_Extraction"),
-                Next_tcb = x.Field<DateTime?>("Next_tcb"),
-                File_No = x.Field<string>("File_No"),
-                Cellphone_number = x.Field<string>("Cellphone_number"),
-                Facility_name = x.Field<string>("Facility_name")
-            });
+                cmd = connection.CreateCommand();
+                cmd.CommandText = query;
 
-            return results;
+                MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
+                DataSet ds = new DataSet();
+                adap.Fill(ds);
+
+                IEnumerable<Appad> results = ds.Tables[0].AsEnumerable().Select(x => new Appad
+                {
+                    Ptd_No = x.Field<string>("Ptd_No"),
+                    Visit = x.Field<double>("Visit"),
+                    Return_date = x.Field<DateTime?>("Return_date"),
+                    Visit_date = x.Field<DateTime?>("Visit_date"),
+                    Status = x.Field<string>("Status"),
+                    Received_sms = x.Field<string>("Received_sms"),
+                    Data_Extraction = x.Field<string>("Data_Extraction"),
+                    Next_tcb = x.Field<DateTime?>("Next_tcb"),
+                    File_No = x.Field<string>("File_No"),
+                    Cellphone_number = x.Field<string>("Cellphone_number"),
+                    Facility_name = x.Field<string>("Facility_name")
+                });
+
+                return results;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                if (connection.State == System.Data.ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
         }
     }
 }
