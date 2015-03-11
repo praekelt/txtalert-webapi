@@ -60,10 +60,24 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> MissedVisits(DateTime dateFrom, DateTime dateTo)
         {
-            string status = "Status = 'M'";
-            string dateField = "Next_tcb";
+            string query = @"SELECT 
+                                * 
+                            FROM 
+                                txtalertdb.p_appad 
+                            WHERE 
+                                Status = 'M'
+                            AND 
+                                NOT ISNULL(Return_date)
+                            AND
+                                Return_date
+                                    BETWEEN 
+                                        '" + dateFrom + @"'
+                                    AND 
+                                        '" + dateTo + @"'
+                            ORDER BY
+                                Return_date DESC";
 
-            return GetByStatus(dateFrom, dateTo, status, dateField);
+            return ExecuteQuery(query);
         }
 
         [HttpGet]
@@ -98,14 +112,14 @@ namespace TxtAlert.API.Controllers
                                 p_appad
                             WHERE
                                 Visit_date < Return_date
+                            AND 
+                                Status <> 'M'
                             AND
                                 Return_date
                                     BETWEEN
                                         '" + dateFrom + @"'
                                     AND 
                                         '" + dateTo + @"
-                            AND 
-                                Status <> 'M'
                             ORDER BY 
                                 Ptd_No, 
                                 Next_tcb DESC";
