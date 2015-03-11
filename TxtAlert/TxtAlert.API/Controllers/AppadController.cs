@@ -17,28 +17,8 @@ namespace TxtAlert.API.Controllers
         [HttpGet, ActionName("DefaultCall")]
         public IEnumerable<Appad> Get()
         {
-            MySqlConnection connection = new MySqlConnection(connString);
-            MySqlCommand cmd;
-            connection.Open();
-
-            try
-            {
-                cmd = connection.CreateCommand();
-                cmd.CommandText = @"SELECT * FROM txtalertdb.p_appad";
-
-                return null;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                if (connection.State == System.Data.ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
+            string query = @"SELECT * FROM txtalertdb.p_appad";
+            return ExecuteQuery(query);
         }
 
         [HttpGet]
@@ -76,7 +56,10 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> ComingVisits(string dateFrom, string dateTo)
         {
-            string query = @"SELECT * FROM p_appad
+            string query = @"SELECT 
+                                * 
+                            FROM 
+                                p_appad
                             WHERE 
                                 NOT ISNULL(Next_tcb)
                             AND
