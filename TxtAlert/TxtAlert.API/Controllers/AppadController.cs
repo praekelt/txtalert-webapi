@@ -24,33 +24,14 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> PatientList()
         {
-            MySqlConnection connection = new MySqlConnection(connString);
-            MySqlCommand cmd;
-            connection.Open();
+            string query = @"SELECT 
+                                *
+                            FROM 
+                                txtalertdb.p_appad 
+                            GROUP BY 
+                                Ptd_No";
 
-            try
-            {
-                cmd = connection.CreateCommand();
-                cmd.CommandText = @"SELECT 
-                                        *
-                                    FROM 
-                                        txtalertdb.p_appad 
-                                    GROUP BY 
-                                        Ptd_No";
-
-                return null;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                if (connection.State == System.Data.ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
+            return ExecuteQuery(query);
         }
 
         [HttpGet]
@@ -88,10 +69,24 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> DoneVisits(DateTime dateFrom, DateTime dateTo)
         {
-            string status = "Status = 'A' or Status = 'AE'";
-            string dateField = "Return_date";
+            string query = @"SELECT 
+                                * 
+                            FROM 
+                                txtalertdb.p_appad 
+                            WHERE 
+                                (Status = 'AE' OR Status = 'A')
+                            AND 
+                                NOT ISNULL(Return_date)
+                            AND
+                                Return_date
+                                    BETWEEN 
+                                        '" + dateFrom + @"'
+                                    AND 
+                                        '" + dateTo + @"'
+                            ORDER BY
+                                Return_date DESC";
 
-            return GetByStatus(dateFrom, dateTo, status, dateField);
+            return ExecuteQuery(query);
         }
 
         // RescheduledVisits returns appointments that were rescheduled:
