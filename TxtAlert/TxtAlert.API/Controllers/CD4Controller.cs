@@ -18,11 +18,11 @@ namespace TxtAlert.API.Controllers
         public IEnumerable<CD4> Get()
         {
             string query = "SELECT * FROM p_cd4_recruit";
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, null, null);
         }
 
         [HttpGet]
-        public IEnumerable<CD4> CD4Counts(string dateFrom, string dateTo)
+        public IEnumerable<CD4> CD4Counts(DateTime? dateFrom, DateTime? dateTo)
         {
             string query = @"SELECT 
                     * 
@@ -31,16 +31,16 @@ namespace TxtAlert.API.Controllers
                 WHERE 
                     ENROLMENT_DATE 
                         BETWEEN 
-                            '" + dateFrom + @"'
+                            @dateFrom
                         AND
-                            '" + dateTo + @"'
+                            @dateTo
                 GROUP BY 
                     LAB_ID";
 
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, dateFrom, dateTo);
         }
 
-        private IEnumerable<CD4> ExecuteQuery(string query)
+        private IEnumerable<CD4> ExecuteQuery(string query, DateTime? dateFrom, DateTime? dateTo)
         {
             MySqlConnection connection = new MySqlConnection(connString);
             MySqlCommand cmd;
@@ -50,6 +50,9 @@ namespace TxtAlert.API.Controllers
             {
                 cmd = connection.CreateCommand();
                 cmd.CommandText = query;
+
+                cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+                cmd.Parameters.AddWithValue("@dateTo", dateTo);
 
                 MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
                 DataSet ds = new DataSet();
