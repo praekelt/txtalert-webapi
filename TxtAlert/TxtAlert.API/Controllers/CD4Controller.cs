@@ -22,7 +22,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<CD4> CD4Counts(DateTime? dateFrom, DateTime? dateTo)
+        public IEnumerable<CD4> CD4Counts(string dateFrom, string dateTo)
         {
             string query = @"SELECT 
                     * 
@@ -40,7 +40,7 @@ namespace TxtAlert.API.Controllers
             return ExecuteQuery(query, dateFrom, dateTo);
         }
 
-        private IEnumerable<CD4> ExecuteQuery(string query, DateTime? dateFrom, DateTime? dateTo)
+        private IEnumerable<CD4> ExecuteQuery(string query, string dateFrom, string dateTo)
         {
             MySqlConnection connection = new MySqlConnection(connString);
             MySqlCommand cmd;
