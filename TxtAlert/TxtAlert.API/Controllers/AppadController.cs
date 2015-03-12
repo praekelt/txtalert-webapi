@@ -18,7 +18,7 @@ namespace TxtAlert.API.Controllers
         public IEnumerable<Appad> Get()
         {
             string query = @"SELECT * FROM txtalertdb.p_appad";
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, null, null);
         }
 
         [HttpGet]
@@ -31,11 +31,11 @@ namespace TxtAlert.API.Controllers
                             GROUP BY 
                                 Ptd_No";
 
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, null, null);
         }
 
         [HttpGet]
-        public IEnumerable<Appad> ComingVisits(string dateFrom, string dateTo)
+        public IEnumerable<Appad> ComingVisits(DateTime? dateFrom, DateTime? dateTo)
         {
             string query = @"SELECT 
                                 * 
@@ -46,19 +46,19 @@ namespace TxtAlert.API.Controllers
                             AND
                                 Next_tcb
                                     BETWEEN 
-                                        '" + dateFrom + @"'
+                                        @dateFrom
                                     AND 
-                                        '" + dateTo + @"'
+                                        @dateTo
                             GROUP BY 
                                 Ptd_No
                             ORDER BY 
                                 Next_tcb DESC";
 
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, dateFrom, dateTo);
         }
 
         [HttpGet]
-        public IEnumerable<Appad> MissedVisits(string dateFrom, string dateTo)
+        public IEnumerable<Appad> MissedVisits(DateTime? dateFrom, DateTime? dateTo)
         {
             string query = @"SELECT 
                                 * 
@@ -71,17 +71,17 @@ namespace TxtAlert.API.Controllers
                             AND
                                 Return_date
                                     BETWEEN 
-                                        '" + dateFrom + @"'
+                                        @dateFrom
                                     AND 
-                                        '" + dateTo + @"'
+                                        @dateTo
                             ORDER BY
                                 Return_date DESC";
 
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, dateFrom, dateTo);
         }
 
         [HttpGet]
-        public IEnumerable<Appad> DoneVisits(string dateFrom, string dateTo)
+        public IEnumerable<Appad> DoneVisits(DateTime? dateFrom, DateTime? dateTo)
         {
             string query = @"SELECT 
                                 * 
@@ -94,17 +94,17 @@ namespace TxtAlert.API.Controllers
                             AND
                                 Return_date
                                     BETWEEN 
-                                        '" + dateFrom + @"'
+                                        @dateFrom
                                     AND 
-                                        '" + dateTo + @"'
+                                        @dateTo
                             ORDER BY
                                 Return_date DESC";
 
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, dateFrom, dateTo);
         }
 
         [HttpGet]
-        public IEnumerable<Appad> RescheduledVisits(string dateFrom, string dateTo)
+        public IEnumerable<Appad> RescheduledVisits(DateTime? dateFrom, DateTime? dateTo)
         {
             string query = @"SELECT
                                 * 
@@ -117,18 +117,18 @@ namespace TxtAlert.API.Controllers
                             AND
                                 Return_date
                                     BETWEEN
-                                        '" + dateFrom + @"'
+                                        @dateFrom
                                     AND 
-                                        '" + dateTo + @"
+                                        @dateTo
                             ORDER BY 
                                 Ptd_No, 
                                 Next_tcb DESC";
 
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, dateFrom, dateTo);
         }
 
         [HttpGet]
-        public IEnumerable<Appad> DeletedVisits(string dateFrom, string dateTo)
+        public IEnumerable<Appad> DeletedVisits(DateTime? dateFrom, DateTime? dateTo)
         {
             string query = @"SELECT
                                 * 
@@ -141,17 +141,17 @@ namespace TxtAlert.API.Controllers
                             AND
                                 Visit_date
                                     BETWEEN
-                                        '" + dateFrom + @"'
+                                        @dateFrom
                                     AND 
-                                        '" + dateTo + @"
+                                        @dateTo
                             ORDER BY 
                                 Ptd_No, 
                                 Next_tcb DESC";
 
-            return ExecuteQuery(query);
+            return ExecuteQuery(query, dateFrom, dateTo);
         }
 
-        private IEnumerable<Appad> ExecuteQuery(string query)
+        private IEnumerable<Appad> ExecuteQuery(string query, DateTime? dateFrom, DateTime? dateTo)
         {
             MySqlConnection connection = new MySqlConnection(connString);
             MySqlCommand cmd;
@@ -161,6 +161,9 @@ namespace TxtAlert.API.Controllers
             {
                 cmd = connection.CreateCommand();
                 cmd.CommandText = query;
+
+                cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+                cmd.Parameters.AddWithValue("@dateTo", dateTo);
 
                 MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
                 DataSet ds = new DataSet();
