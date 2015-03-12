@@ -35,7 +35,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> ComingVisits(DateTime? dateFrom, DateTime? dateTo)
+        public IEnumerable<Appad> ComingVisits(string dateFrom, string dateTo)
         {
             string query = @"SELECT 
                                 * 
@@ -58,7 +58,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> MissedVisits(DateTime? dateFrom, DateTime? dateTo)
+        public IEnumerable<Appad> MissedVisits(string dateFrom, string dateTo)
         {
             string query = @"SELECT 
                                 * 
@@ -81,7 +81,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> DoneVisits(DateTime? dateFrom, DateTime? dateTo)
+        public IEnumerable<Appad> DoneVisits(string dateFrom, string dateTo)
         {
             string query = @"SELECT 
                                 * 
@@ -104,7 +104,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> RescheduledVisits(DateTime? dateFrom, DateTime? dateTo)
+        public IEnumerable<Appad> RescheduledVisits(string dateFrom, string dateTo)
         {
             string query = @"SELECT
                                 * 
@@ -128,7 +128,7 @@ namespace TxtAlert.API.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Appad> DeletedVisits(DateTime? dateFrom, DateTime? dateTo)
+        public IEnumerable<Appad> DeletedVisits(string dateFrom, string dateTo)
         {
             string query = @"SELECT
                                 * 
@@ -151,7 +151,7 @@ namespace TxtAlert.API.Controllers
             return ExecuteQuery(query, dateFrom, dateTo);
         }
 
-        private IEnumerable<Appad> ExecuteQuery(string query, DateTime? dateFrom, DateTime? dateTo)
+        private IEnumerable<Appad> ExecuteQuery(string query, string dateFrom, string dateTo)
         {
             MySqlConnection connection = new MySqlConnection(connString);
             MySqlCommand cmd;
