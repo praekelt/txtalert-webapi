@@ -181,6 +181,26 @@ namespace TxtAlert.API.Controllers
             return ExecuteQuery(query, dateFrom, dateTo);
         }
 
+        private string GenerateQuery(string filter, string order)
+        {
+            string query = @"SELECT 
+                                    *,
+                                    '" + tables[0].Clinic + @"' AS Facility_name
+                                FROM " + tables[0].View + filter;
+
+            for (int i = 1; i < tables.Count(); i++)
+            {
+                query += @" UNION ALL SELECT 
+                                    *,
+                                    '" + tables[i].Clinic + @"' AS Facility_name
+                                FROM " + tables[i].View + filter;
+            }
+
+            query += order;
+
+            return query;
+        }
+
         private IEnumerable<Appad> ExecuteQuery(string query, string dateFrom, string dateTo)
         {
             MySqlConnection connection = new MySqlConnection(connString);
