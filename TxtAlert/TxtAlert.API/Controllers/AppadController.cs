@@ -7,11 +7,41 @@ using System.Web.Http;
 using System.Data;
 using MySql.Data.MySqlClient;
 using TxtAlert.API.Models;
+using System.Collections.Specialized;
+using System.Configuration;
 
 namespace TxtAlert.API.Controllers
 {
     public class AppadController : ApiController
     {
+        private class ViewObject
+        {
+            public string Clinic { get; set; }
+            public string View { get; set; }
+        }
+
+        List<ViewObject> tables = new List<ViewObject>();
+
+        private AppadController()
+        {
+            NameValueCollection appSettings = ConfigurationManager.AppSettings;
+            string[] keys = appSettings.AllKeys;
+
+            foreach (string key in keys)
+            {
+                int index = key.IndexOf("Clinic_");
+                if (index >= 0)
+                {
+                    string name = key.Replace("Clinic_", "");
+                    tables.Add(new ViewObject
+                    {
+                        Clinic = name,
+                        View = appSettings[key]
+                    });
+                }
+            }
+        }
+
         readonly string connString = Properties.Settings.Default.ConnectionString;
 
         [HttpGet, ActionName("DefaultCall")]
