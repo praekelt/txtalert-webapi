@@ -174,25 +174,27 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> DeletedVisits(string dateFrom, string dateTo)
         {
-            string query = @"SELECT
-                                * 
-                            FROM 
-                                p_appad
-                            WHERE
-                                ISNULL(Return_date)
-                            AND 
-                                Status <> 'M'
-                            AND
-                                Visit_date
-                                    BETWEEN
-                                        @dateFrom
-                                    AND 
-                                        @dateTo
-                            ORDER BY 
-                                Ptd_No, 
-                                Next_tcb DESC";
+            if (tables.Count() > 0)
+            {
+                string filter = @" WHERE
+                                       ISNULL(Return_date)
+                                   AND 
+                                       Status <> 'M'
+                                   AND
+                                       Visit_date
+                                           BETWEEN
+                                               @dateFrom
+                                           AND 
+                                               @dateTo";
+                string order = @" ORDER BY 
+                                    Ptd_No, 
+                                    Next_tcb DESC";
 
-            return ExecuteQuery(query, dateFrom, dateTo);
+                string query = GenerateQuery(filter, order);
+                return ExecuteQuery(query, dateFrom, dateTo);
+            }
+
+            return null;
         }
 
         private string GenerateQuery(string filter, string order)
