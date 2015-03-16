@@ -148,25 +148,27 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> RescheduledVisits(string dateFrom, string dateTo)
         {
-            string query = @"SELECT
-                                * 
-                            FROM 
-                                p_appad
-                            WHERE
-                                Visit_date < Return_date
-                            AND 
-                                Status <> 'M'
-                            AND
-                                Return_date
-                                    BETWEEN
-                                        @dateFrom
-                                    AND 
-                                        @dateTo
-                            ORDER BY 
-                                Ptd_No, 
-                                Next_tcb DESC";
+            if (tables.Count() > 0)
+            {
+                string filter = @" WHERE
+                                       Visit_date < Return_date
+                                   AND 
+                                       Status <> 'M'
+                                   AND
+                                       Return_date
+                                           BETWEEN
+                                               @dateFrom
+                                           AND 
+                                               @dateTo";
+                string order = @" ORDER BY 
+                                    Ptd_No, 
+                                    Next_tcb DESC";
 
-            return ExecuteQuery(query, dateFrom, dateTo);
+                string query = GenerateQuery(filter, order);
+                return ExecuteQuery(query, dateFrom, dateTo);
+            }
+
+            return null;
         }
 
         [HttpGet]
