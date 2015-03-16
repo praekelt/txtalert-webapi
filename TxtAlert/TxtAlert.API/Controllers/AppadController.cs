@@ -42,7 +42,7 @@ namespace TxtAlert.API.Controllers
             }
         }
 
-        readonly string connString = Properties.Settings.Default.ConnectionString;
+        readonly string connString = Properties.Settings.Default.MySQLConnectionString;
 
         [HttpGet, ActionName("DefaultCall")]
         public IEnumerable<Appad> Get()
