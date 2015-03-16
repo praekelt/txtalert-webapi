@@ -9,6 +9,7 @@ using MySql.Data.MySqlClient;
 using TxtAlert.API.Models;
 using System.Collections.Specialized;
 using System.Configuration;
+using System.Data.SqlClient;
 
 namespace TxtAlert.API.Controllers
 {
@@ -21,6 +22,7 @@ namespace TxtAlert.API.Controllers
         }
 
         List<ViewObject> tables = new List<ViewObject>();
+        readonly bool useMySQL = true;
 
         private AppadController()
         {
@@ -40,9 +42,9 @@ namespace TxtAlert.API.Controllers
                     });
                 }
             }
-        }
 
-        readonly string connString = Properties.Settings.Default.MySQLConnectionString;
+            useMySQL = appSettings["Use_MySQL"].ToLower() == "y";
+        }
 
         [HttpGet, ActionName("DefaultCall")]
         public IEnumerable<Appad> Get()
@@ -62,8 +64,7 @@ namespace TxtAlert.API.Controllers
             if (tables.Count() > 0)
             {
                 string filter = @" GROUP BY Ptd_No";
-
-                string query = GenerateQuery(filter, "");
+                string query = GeneratePatientListQuery();
                 return ExecuteQuery(query, null, null);
             }
 
@@ -75,16 +76,15 @@ namespace TxtAlert.API.Controllers
         {
             if (tables.Count() > 0)
             {
+                string nullCheck = (useMySQL) ? "NOT ISNULL(Next_tcb)" : "Next_tcb IS NOT NULL";
                 string filter = @" WHERE 
-                                       NOT ISNULL(Next_tcb)
+                                       " + nullCheck + @"
                                    AND
                                        Next_tcb
                                            BETWEEN 
                                                @dateFrom
                                            AND 
-                                               @dateTo
-                                   GROUP BY 
-                                       Ptd_No";
+                                               @dateTo";
                 string order = @" ORDER BY 
                                     Next_tcb DESC";
 
@@ -100,18 +100,19 @@ namespace TxtAlert.API.Controllers
         {
             if (tables.Count() > 0)
             {
+                string nullCheck = (useMySQL) ? "NOT ISNULL(Return_date)" : "Return_date IS NOT NULL";
                 string filter = @" WHERE 
+                                       " + nullCheck + @" 
+                                   AND
                                        Status = 'M'
                                    AND 
-                                       NOT ISNULL(Return_date)
-                                   AND
                                        Return_date
                                            BETWEEN 
                                                @dateFrom
                                            AND 
                                                @dateTo";
                 string order = @" ORDER BY
-                                    Return_date DESC";
+                                      Return_date DESC";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteQuery(query, dateFrom, dateTo);
@@ -125,11 +126,12 @@ namespace TxtAlert.API.Controllers
         {
             if (tables.Count() > 0)
             {
+                string nullCheck = (useMySQL) ? "NOT ISNULL(Return_date)" : "Return_date IS NOT NULL";
                 string filter = @" WHERE 
+                                       " + nullCheck + @"
+                                   AND
                                        (Status = 'AE' OR Status = 'A')
                                    AND 
-                                       NOT ISNULL(Return_date)
-                                   AND
                                        Return_date
                                            BETWEEN 
                                                @dateFrom
@@ -176,8 +178,9 @@ namespace TxtAlert.API.Controllers
         {
             if (tables.Count() > 0)
             {
+                string nullCheck = (useMySQL) ? "NOT ISNULL(Return_date)" : "Return_date IS NOT NULL";
                 string filter = @" WHERE
-                                       ISNULL(Return_date)
+                                       " + nullCheck + @"
                                    AND 
                                        Status <> 'M'
                                    AND
@@ -217,8 +220,67 @@ namespace TxtAlert.API.Controllers
             return query;
         }
 
-        private IEnumerable<Appad> ExecuteQuery(string query, string dateFrom, string dateTo)
+        private string GeneratePatientListQuery()
         {
+            string query = @"SELECT DISTINCT
+                                Ptd_No,
+                                File_No,
+                                Cellphone_number,
+                                '" + tables[0].Clinic + @"' AS [Facility_name] 
+                             FROM " + tables[0].View;
+
+            for (int i = 1; i < tables.Count(); i++)
+            {
+                query += @" UNION ALL SELECT DISTINCT
+                                Ptd_No,
+                                File_No,
+                                Cellphone_number,
+                                '" + tables[i].Clinic + @"' AS [Facility_name] 
+                             FROM " + tables[i].View;
+            }
+
+            return query;
+        }
+
+        private DataSet MSSQL_GetDataSet(string query, string dateFrom, string dateTo)
+        {
+            string connString = Properties.Settings.Default.MSSQLConnectionString;
+            SqlConnection connection = new SqlConnection(connString);
+            SqlCommand cmd;
+            connection.Open();
+
+            try
+            {
+                cmd = connection.CreateCommand();
+                cmd.CommandText = query;
+
+                if (dateFrom != null)
+                    cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+                if (dateTo != null)
+                    cmd.Parameters.AddWithValue("@dateTo", dateTo);
+
+                SqlDataAdapter adap = new SqlDataAdapter(cmd);
+                DataSet ds = new DataSet();
+                adap.Fill(ds);
+
+                return ds;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                if (connection.State == System.Data.ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+        }
+
+        private DataSet MySQL_GetDataSet(string query, string dateFrom, string dateTo)
+        {
+            string connString = Properties.Settings.Default.MySQLConnectionString;
             MySqlConnection connection = new MySqlConnection(connString);
             MySqlCommand cmd;
             connection.Open();
@@ -235,22 +297,7 @@ namespace TxtAlert.API.Controllers
                 DataSet ds = new DataSet();
                 adap.Fill(ds);
 
-                IEnumerable<Appad> results = ds.Tables[0].AsEnumerable().Select(x => new Appad
-                {
-                    Ptd_No = x.Field<string>("Ptd_No"),
-                    Visit = x.Field<double>("Visit"),
-                    Return_date = x.Field<DateTime?>("Return_date"),
-                    Visit_date = x.Field<DateTime?>("Visit_date"),
-                    Status = x.Field<string>("Status"),
-                    Received_sms = x.Field<string>("Received_sms"),
-                    Data_Extraction = x.Field<string>("Data_Extraction"),
-                    Next_tcb = x.Field<DateTime?>("Next_tcb"),
-                    File_No = x.Field<string>("File_No"),
-                    Cellphone_number = x.Field<string>("Cellphone_number"),
-                    Facility_name = x.Field<string>("Facility_name")
-                });
-
-                return results;
+                return ds;
             }
             catch (Exception)
             {
@@ -263,6 +310,34 @@ namespace TxtAlert.API.Controllers
                     connection.Close();
                 }
             }
+        }
+
+        private IEnumerable<Appad> ExecuteQuery(string query, string dateFrom, string dateTo)
+        {
+            NameValueCollection appSettings = ConfigurationManager.AppSettings;
+            DataSet ds;
+
+            if (useMySQL)
+                ds = MySQL_GetDataSet(query, dateFrom, dateTo);
+            else
+                ds = MSSQL_GetDataSet(query, dateFrom, dateTo);
+
+            IEnumerable<Appad> results = ds.Tables[0].AsEnumerable().Select(x => new Appad
+            {
+                Ptd_No = (x.Table.Columns.Contains("Ptd_No") ? x.Field<string>("Ptd_No") : null),
+                Visit = (x.Table.Columns.Contains("Visit") ? x.Field<double>("Visit") : 0),
+                Return_date = (x.Table.Columns.Contains("Return_date") ? x.Field<DateTime?>("Return_date") : null),
+                Visit_date = (x.Table.Columns.Contains("") ? x.Field<DateTime?>("Visit_date") : null),
+                Status = (x.Table.Columns.Contains("Status") ? x.Field<string>("Status") : null),
+                Received_sms = (x.Table.Columns.Contains("Received_sms") ? x.Field<string>("Received_sms") : null),
+                Data_Extraction = (x.Table.Columns.Contains("Data_Extraction") ? x.Field<string>("Data_Extraction") : null),
+                Next_tcb = (x.Table.Columns.Contains("Next_tcb") ? x.Field<DateTime?>("Next_tcb") : null),
+                File_No = (x.Table.Columns.Contains("File_No") ? x.Field<string>("File_No") : null),
+                Cellphone_number = (x.Table.Columns.Contains("") ? x.Field<string>("Cellphone_number") : null),
+                Facility_name = (x.Table.Columns.Contains("Facility_name") ? x.Field<string>("Facility_name") : null)
+            });
+
+            return results;
         }
     }
 }
