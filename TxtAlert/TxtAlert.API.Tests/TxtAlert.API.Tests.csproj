@@ -75,7 +75,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Test_AppadController.cs" />
-    <Compile Include="Test_CD4Controller.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TxtAlert.API\TxtAlert.API.csproj">
