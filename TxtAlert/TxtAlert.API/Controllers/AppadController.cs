@@ -47,8 +47,13 @@ namespace TxtAlert.API.Controllers
         [HttpGet, ActionName("DefaultCall")]
         public IEnumerable<Appad> Get()
         {
-            string query = @"SELECT * FROM txtalertdb.p_appad";
-            return ExecuteQuery(query, null, null);
+            if (tables.Count() > 0)
+            {
+                string query = GenerateQuery("", "");
+                return ExecuteQuery(query, null, null);
+            }
+
+            return null;
         }
 
         [HttpGet]
