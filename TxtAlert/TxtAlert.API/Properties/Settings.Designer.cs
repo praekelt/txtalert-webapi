@@ -28,9 +28,19 @@ namespace TxtAlert.API.Properties {
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
         [global::System.Configuration.DefaultSettingValueAttribute("server=localhost;user id=rabbit1;password=rabbit1;persistsecurityinfo=True;databa" +
             "se=txtalertdb")]
-        public string ConnectionString {
+        public string MySQLConnectionString {
             get {
-                return ((string)(this["ConnectionString"]));
+                return ((string)(this["MySQLConnectionString"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Server=(local)\\SQLEXPRESS2014;Database=txtalertdb;User Id=sa;Password=rabbit;")]
+        public string MSSQLConnectionString {
+            get {
+                return ((string)(this["MSSQLConnectionString"]));
             }
         }
     }
