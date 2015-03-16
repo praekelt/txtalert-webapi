@@ -59,14 +59,15 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> PatientList()
         {
-            string query = @"SELECT 
-                                *
-                            FROM 
-                                txtalertdb.p_appad 
-                            GROUP BY 
-                                Ptd_No";
+            if (tables.Count() > 0)
+            {
+                string filter = @" GROUP BY Ptd_No";
 
-            return ExecuteQuery(query, null, null);
+                string query = GenerateQuery(filter, "");
+                return ExecuteQuery(query, null, null);
+            }
+
+            return null;
         }
 
         [HttpGet]
