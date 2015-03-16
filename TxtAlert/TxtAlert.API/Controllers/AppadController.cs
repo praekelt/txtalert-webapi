@@ -123,24 +123,26 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> DoneVisits(string dateFrom, string dateTo)
         {
-            string query = @"SELECT 
-                                * 
-                            FROM 
-                                txtalertdb.p_appad 
-                            WHERE 
-                                (Status = 'AE' OR Status = 'A')
-                            AND 
-                                NOT ISNULL(Return_date)
-                            AND
-                                Return_date
-                                    BETWEEN 
-                                        @dateFrom
-                                    AND 
-                                        @dateTo
-                            ORDER BY
-                                Return_date DESC";
+            if (tables.Count() > 0)
+            {
+                string filter = @" WHERE 
+                                       (Status = 'AE' OR Status = 'A')
+                                   AND 
+                                       NOT ISNULL(Return_date)
+                                   AND
+                                       Return_date
+                                           BETWEEN 
+                                               @dateFrom
+                                           AND 
+                                               @dateTo";
+                string order = @" ORDER BY
+                                    Return_date DESC";
 
-            return ExecuteQuery(query, dateFrom, dateTo);
+                string query = GenerateQuery(filter, order);
+                return ExecuteQuery(query, dateFrom, dateTo);
+            }
+
+            return null;
         }
 
         [HttpGet]
