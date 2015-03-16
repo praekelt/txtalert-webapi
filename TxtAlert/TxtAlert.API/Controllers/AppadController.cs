@@ -73,24 +73,26 @@ namespace TxtAlert.API.Controllers
         [HttpGet]
         public IEnumerable<Appad> ComingVisits(string dateFrom, string dateTo)
         {
-            string query = @"SELECT 
-                                * 
-                            FROM 
-                                p_appad
-                            WHERE 
-                                NOT ISNULL(Next_tcb)
-                            AND
-                                Next_tcb
-                                    BETWEEN 
-                                        @dateFrom
-                                    AND 
-                                        @dateTo
-                            GROUP BY 
-                                Ptd_No
-                            ORDER BY 
-                                Next_tcb DESC";
+            if (tables.Count() > 0)
+            {
+                string filter = @" WHERE 
+                                       NOT ISNULL(Next_tcb)
+                                   AND
+                                       Next_tcb
+                                           BETWEEN 
+                                               @dateFrom
+                                           AND 
+                                               @dateTo
+                                   GROUP BY 
+                                       Ptd_No";
+                string order = @" ORDER BY 
+                                    Next_tcb DESC";
 
-            return ExecuteQuery(query, dateFrom, dateTo);
+                string query = GenerateQuery(filter, order);
+                return ExecuteQuery(query, dateFrom, dateTo);
+            }
+
+            return null;
         }
 
         [HttpGet]
