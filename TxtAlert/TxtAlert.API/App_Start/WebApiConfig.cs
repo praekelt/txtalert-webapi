@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using System.Web.Http.Cors;
 
 namespace TxtAlert.API
 {
@@ -11,6 +12,7 @@ namespace TxtAlert.API
         {
             // Web API configuration and services
 
+            config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
             // Web API routes
             config.MapHttpAttributeRoutes();
 
