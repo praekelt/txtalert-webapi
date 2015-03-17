@@ -8,7 +8,7 @@ namespace TxtAlert.API.Models
     public class Appad
     {
         public string Ptd_No { get; set; }
-        public double Visit { get; set; }
+        public double? Visit { get; set; }
         public DateTime? Return_date { get; set; }
         public DateTime? Visit_date { get; set; }
         public string Status { get; set; }

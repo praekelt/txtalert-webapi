@@ -52,20 +52,25 @@ namespace TxtAlert.API.Controllers
             if (tables.Count() > 0)
             {
                 string query = GenerateQuery("", "");
-                return ExecuteQuery(query, null, null);
+                return ExecuteVisitQuery(query, null, null);
             }
 
             return null;
         }
 
         [HttpGet]
-        public IEnumerable<Appad> PatientList()
+        public IEnumerable<PatientList> PatientList()
         {
             if (tables.Count() > 0)
             {
-                string filter = @" GROUP BY Ptd_No";
-                string query = GeneratePatientListQuery();
-                return ExecuteQuery(query, null, null);
+                List<PatientList> patients = new List<PatientList>();
+                for (int i = 0; i < tables.Count; ++i)
+                {
+                    string query = GeneratePatientListQuery(i);
+                    patients.Add(ExecutePatientQuery(query, tables[i].Clinic));
+                }
+
+                return patients;
             }
 
             return null;
@@ -89,7 +94,7 @@ namespace TxtAlert.API.Controllers
                                     Next_tcb DESC";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo);
             }
 
             return null;
@@ -115,7 +120,7 @@ namespace TxtAlert.API.Controllers
                                       Return_date DESC";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo);
             }
 
             return null;
@@ -141,7 +146,7 @@ namespace TxtAlert.API.Controllers
                                     Return_date DESC";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo);
             }
 
             return null;
@@ -167,7 +172,7 @@ namespace TxtAlert.API.Controllers
                                     Next_tcb DESC";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo);
             }
 
             return null;
@@ -194,7 +199,7 @@ namespace TxtAlert.API.Controllers
                                     Next_tcb DESC";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo);
             }
 
             return null;
@@ -220,24 +225,14 @@ namespace TxtAlert.API.Controllers
             return query;
         }
 
-        private string GeneratePatientListQuery()
+        private string GeneratePatientListQuery(int index)
         {
             string query = @"SELECT DISTINCT
                                 Ptd_No,
                                 File_No,
                                 Cellphone_number,
-                                '" + tables[0].Clinic + @"' AS [Facility_name] 
-                             FROM " + tables[0].View;
-
-            for (int i = 1; i < tables.Count(); i++)
-            {
-                query += @" UNION ALL SELECT DISTINCT
-                                Ptd_No,
-                                File_No,
-                                Cellphone_number,
-                                '" + tables[i].Clinic + @"' AS [Facility_name] 
-                             FROM " + tables[i].View;
-            }
+                                '" + tables[index].Clinic + @"' AS [Facility_name] 
+                             FROM " + tables[index].View;
 
             return query;
         }
@@ -312,7 +307,7 @@ namespace TxtAlert.API.Controllers
             }
         }
 
-        private IEnumerable<Appad> ExecuteQuery(string query, string dateFrom, string dateTo)
+        private IEnumerable<Appad> ExecuteVisitQuery(string query, string dateFrom, string dateTo)
         {
             NameValueCollection appSettings = ConfigurationManager.AppSettings;
             DataSet ds;
@@ -325,7 +320,7 @@ namespace TxtAlert.API.Controllers
             IEnumerable<Appad> results = ds.Tables[0].AsEnumerable().Select(x => new Appad
             {
                 Ptd_No = (x.Table.Columns.Contains("Ptd_No") ? x.Field<string>("Ptd_No") : null),
-                Visit = (x.Table.Columns.Contains("Visit") ? x.Field<double>("Visit") : 0),
+                Visit = (x.Table.Columns.Contains("Visit") ? x.Field<double?>("Visit") : null),
                 Return_date = (x.Table.Columns.Contains("Return_date") ? x.Field<DateTime?>("Return_date") : null),
                 Visit_date = (x.Table.Columns.Contains("Visit_date") ? x.Field<DateTime?>("Visit_date") : null),
                 Status = (x.Table.Columns.Contains("Status") ? x.Field<string>("Status") : null),
@@ -338,6 +333,28 @@ namespace TxtAlert.API.Controllers
             });
 
             return results;
+        }
+
+        private PatientList ExecutePatientQuery(string query, string clinic)
+        {
+            DataSet ds;
+
+            if (useMySQL)
+                ds = MySQL_GetDataSet(query, null, null);
+            else
+                ds = MSSQL_GetDataSet(query, null, null);
+
+            PatientList list = new PatientList();
+            list.Facility_name = clinic;
+
+            list.Patients = ds.Tables[0].AsEnumerable().Select(x => new Patient
+            {
+                Ptd_No = (x.Table.Columns.Contains("Ptd_No") ? x.Field<string>("Ptd_No") : null),
+                File_No = (x.Table.Columns.Contains("File_No") ? x.Field<string>("File_No") : null),
+                Cellphone_number = (x.Table.Columns.Contains("Cellphone_number") ? x.Field<string>("Cellphone_number") : null)
+            });
+
+            return list;
         }
     }
 }
