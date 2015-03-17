@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>
+        TXTAlert - QA Testing
+    </title>
+    <link href="css/ng-table.css" rel="stylesheet" />
+    <script src="js/angular.js"></script>
+    <script src="js/ng-table.js"></script>
+    <script src="js/controller.js"></script>
+    <script src="js/factories.js"></script>
+</head>
+<body ng-app="txtAlertQA">
+    <div ng-controller="appController">
+        <div ng-repeat="controller in apiControllers">
+            <label for="{{controller.Description}}">{{controller.Description}}</label>
+            <select id="{{controller.Description}}" ng-options="action.url as action.description for action in controller.actions" ng-model="selected.action"></select>
+            <input type="submit" value="Submit" ng-click="getData()"/>
+        </div>
+    </div>
+    <div class="visitsTable">
+        <table ng-table="txtAlertTable" show-filter="true" class="table table-hover ng-table-rowselected">
+            <tr ng-repeat="visit in $data">
+                <td data-title="'Cellphone_number'" filter="{ 'Cellphone_number': 'text' }">{{visit.Cellphone_number}}</td>
+                <td data-title="'Data_Extraction'" filter="{ 'Data_Extraction': 'text' }">{{visit.Data_Extraction}}</td>
+                <td data-title="'Facility_name'" filter="{ 'Facility_name': 'text' }">{{visit.Facility_name}}</td>
+                <td data-title="'File_No'" filter="{ 'File_No': 'text' }">{{visit.File_No}}</td>
+                <td data-title="'Next_tcb'" filter="{ 'Next_tcb': 'text' }">{{visit.Next_tcb}}</td>
+                <td data-title="'Ptd_No'" filter="{ 'Ptd_No': 'text' }">{{visit.Ptd_No}}</td>
+                <td data-title="'Received_sms'" filter="{ 'Received_sms': 'text' }">{{visit.Received_sms}}</td>
+                <td data-title="'Return_date'" filter="{ 'Return_date': 'text' }">{{visit.Return_date}}</td>
+                <td data-title="'Status'" filter="{ 'Status': 'text' }">{{visit.Status}}</td>
+                <td data-title="'Visit'" filter="{ 'Visit': 'text' }">{{visit.Visit}}</td>
+                <td data-title="'Visit_date'" filter="{ 'Visit_date': 'text' }">{{visit.Visit_date}}</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
