@@ -327,13 +327,13 @@ namespace TxtAlert.API.Controllers
                 Ptd_No = (x.Table.Columns.Contains("Ptd_No") ? x.Field<string>("Ptd_No") : null),
                 Visit = (x.Table.Columns.Contains("Visit") ? x.Field<double>("Visit") : 0),
                 Return_date = (x.Table.Columns.Contains("Return_date") ? x.Field<DateTime?>("Return_date") : null),
-                Visit_date = (x.Table.Columns.Contains("") ? x.Field<DateTime?>("Visit_date") : null),
+                Visit_date = (x.Table.Columns.Contains("Visit_date") ? x.Field<DateTime?>("Visit_date") : null),
                 Status = (x.Table.Columns.Contains("Status") ? x.Field<string>("Status") : null),
                 Received_sms = (x.Table.Columns.Contains("Received_sms") ? x.Field<string>("Received_sms") : null),
                 Data_Extraction = (x.Table.Columns.Contains("Data_Extraction") ? x.Field<string>("Data_Extraction") : null),
                 Next_tcb = (x.Table.Columns.Contains("Next_tcb") ? x.Field<DateTime?>("Next_tcb") : null),
                 File_No = (x.Table.Columns.Contains("File_No") ? x.Field<string>("File_No") : null),
-                Cellphone_number = (x.Table.Columns.Contains("") ? x.Field<string>("Cellphone_number") : null),
+                Cellphone_number = (x.Table.Columns.Contains("Cellphone_number") ? x.Field<string>("Cellphone_number") : null),
                 Facility_name = (x.Table.Columns.Contains("Facility_name") ? x.Field<string>("Facility_name") : null)
             });
 
