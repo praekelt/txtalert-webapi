@@ -81,17 +81,25 @@ namespace TxtAlert.API.Controllers
         {
             if (tables.Count() > 0)
             {
-                string nullCheck = (useMySQL) ? "NOT ISNULL(Next_tcb)" : "Next_tcb IS NOT NULL";
                 string filter = @" WHERE 
-                                       " + nullCheck + @"
-                                   AND
                                        Next_tcb
                                            BETWEEN 
                                                @dateFrom
                                            AND 
-                                               @dateTo";
+                                               @dateTo
+                                   OR 
+                                       (
+                                           Status IS NULL
+                                       AND
+                                           Visit_date
+                                               BETWEEN
+                                                   @dateFrom2
+                                               AND
+                                                   @dateTo2
+                                       )";
                 string order = @" ORDER BY 
-                                    Next_tcb DESC";
+                                    Ptd_No, 
+                                    Visit";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteVisitQuery(query, dateFrom, dateTo);
@@ -105,19 +113,17 @@ namespace TxtAlert.API.Controllers
         {
             if (tables.Count() > 0)
             {
-                string nullCheck = (useMySQL) ? "NOT ISNULL(Return_date)" : "Return_date IS NOT NULL";
-                string filter = @" WHERE 
-                                       " + nullCheck + @" 
-                                   AND
+                string filter = @" WHERE
                                        Status = 'M'
                                    AND 
-                                       Return_date
+                                       Visit_date
                                            BETWEEN 
                                                @dateFrom
                                            AND 
                                                @dateTo";
                 string order = @" ORDER BY
-                                      Return_date DESC";
+                                    Ptd_No, 
+                                    Visit";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteVisitQuery(query, dateFrom, dateTo);
@@ -131,19 +137,29 @@ namespace TxtAlert.API.Controllers
         {
             if (tables.Count() > 0)
             {
-                string nullCheck = (useMySQL) ? "NOT ISNULL(Return_date)" : "Return_date IS NOT NULL";
                 string filter = @" WHERE 
-                                       " + nullCheck + @"
-                                   AND
-                                       (Status = 'AE' OR Status = 'A')
-                                   AND 
-                                       Return_date
-                                           BETWEEN 
-                                               @dateFrom
-                                           AND 
-                                               @dateTo";
+                                       (
+                                            Status = 'A'
+                                       AND 
+                                            Visit_date
+                                                BETWEEN 
+                                                    @dateFrom
+                                                AND 
+                                                    @dateTo
+                                       )
+                                       OR
+                                       (
+                                            Status = 'AE'
+                                       AND
+                                            Return_date
+                                                BETWEEN 
+                                                    @dateFrom2
+                                                AND 
+                                                    @dateTo2
+                                       )";
                 string order = @" ORDER BY
-                                    Return_date DESC";
+                                    Ptd_No, 
+                                    Visit";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteVisitQuery(query, dateFrom, dateTo);
@@ -158,18 +174,18 @@ namespace TxtAlert.API.Controllers
             if (tables.Count() > 0)
             {
                 string filter = @" WHERE
-                                       Visit_date < Return_date
-                                   AND 
-                                       Status <> 'M'
+                                       Visit_date < Next_tcb
                                    AND
-                                       Return_date
+                                       Status = 'M'
+                                   AND
+                                       Next_tcb
                                            BETWEEN
                                                @dateFrom
                                            AND 
                                                @dateTo";
                 string order = @" ORDER BY 
                                     Ptd_No, 
-                                    Next_tcb DESC";
+                                    Visit";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteVisitQuery(query, dateFrom, dateTo);
@@ -237,7 +253,7 @@ namespace TxtAlert.API.Controllers
             return query;
         }
 
-        private DataSet MSSQL_GetDataSet(string query, string dateFrom, string dateTo)
+        private DataSet MSSQL_GetDataSet(string query, DateTime? dateFrom, DateTime? dateTo)
         {
             string connString = Properties.Settings.Default.MSSQLConnectionString;
             SqlConnection connection = new SqlConnection(connString);
@@ -249,10 +265,26 @@ namespace TxtAlert.API.Controllers
                 cmd = connection.CreateCommand();
                 cmd.CommandText = query;
 
-                if (dateFrom != null)
+                if (dateFrom.HasValue)
+                {
                     cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
-                if (dateTo != null)
+                }
+
+                if (dateTo.HasValue)
+                {
                     cmd.Parameters.AddWithValue("@dateTo", dateTo);
+                }
+
+                // Some  queries have two between statements
+                if (dateFrom.HasValue)
+                {
+                    cmd.Parameters.AddWithValue("@dateFrom2", dateFrom);
+                }
+
+                if (dateTo.HasValue)
+                {
+                    cmd.Parameters.AddWithValue("@dateTo2", dateTo);
+                }
 
                 SqlDataAdapter adap = new SqlDataAdapter(cmd);
                 DataSet ds = new DataSet();
@@ -273,7 +305,7 @@ namespace TxtAlert.API.Controllers
             }
         }
 
-        private DataSet MySQL_GetDataSet(string query, string dateFrom, string dateTo)
+        private DataSet MySQL_GetDataSet(string query, DateTime? dateFrom, DateTime? dateTo)
         {
             string connString = Properties.Settings.Default.MySQLConnectionString;
             MySqlConnection connection = new MySqlConnection(connString);
@@ -285,8 +317,26 @@ namespace TxtAlert.API.Controllers
                 cmd = connection.CreateCommand();
                 cmd.CommandText = query;
 
-                cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
-                cmd.Parameters.AddWithValue("@dateTo", dateTo);
+                if (dateFrom.HasValue)
+                {
+                    cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+                }
+
+                if (dateTo.HasValue)
+                {
+                    cmd.Parameters.AddWithValue("@dateTo", dateTo);
+                }
+
+                // Some  queries have two between statements
+                if (dateFrom.HasValue)
+                {
+                    cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+                }
+
+                if (dateTo.HasValue)
+                {
+                    cmd.Parameters.AddWithValue("@dateTo", dateTo);
+                }
 
                 MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
                 DataSet ds = new DataSet();
@@ -307,15 +357,69 @@ namespace TxtAlert.API.Controllers
             }
         }
 
+        private DateTime? ConstructDate(string date, bool fillTime = false)
+        {
+            if(String.IsNullOrEmpty(date))
+            {
+                return null;
+            }
+
+            string[] parts = date.Split(new char[] { '_' });
+            
+            if(parts.Length != 3)
+            {
+                return null;
+            }
+
+            DateTime? dt = null;
+
+            try
+            {
+                int month = 0;
+                int year = 0;
+                int day = 0;
+
+                if( 
+                    int.TryParse(parts[0], out year) &&
+                    int.TryParse(parts[1], out month) &&
+                    int.TryParse(parts[2], out day)
+                    )
+                {
+                    if(fillTime)
+                    {
+                        dt = new DateTime(year, month, day, 23, 59, 59, 999);
+                    }
+                    else
+                    {
+                        dt = new DateTime(year, month, day);
+                    }                    
+                }                
+            }
+            catch(Exception)
+            {
+                dt = null;
+            }
+
+            return dt;
+        }
+
         private IEnumerable<Appad> ExecuteVisitQuery(string query, string dateFrom, string dateTo)
         {
             NameValueCollection appSettings = ConfigurationManager.AppSettings;
             DataSet ds;
 
+            DateTime? dFrom = ConstructDate(dateFrom);
+            DateTime? dTo = ConstructDate(dateTo, true);
+
+            if(!dFrom.HasValue || !dTo.HasValue)
+            {
+                return new List<Appad>().AsEnumerable();
+            }
+
             if (useMySQL)
-                ds = MySQL_GetDataSet(query, dateFrom, dateTo);
+                ds = MySQL_GetDataSet(query, dFrom, dTo);
             else
-                ds = MSSQL_GetDataSet(query, dateFrom, dateTo);
+                ds = MSSQL_GetDataSet(query, dFrom, dTo);
 
             IEnumerable<Appad> results = ds.Tables[0].AsEnumerable().Select(x => new Appad
             {
