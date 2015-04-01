@@ -52,7 +52,7 @@ namespace TxtAlert.API.Controllers
             if (tables.Count() > 0)
             {
                 string query = GenerateQuery("", "");
-                return ExecuteVisitQuery(query, null, null);
+                return ExecuteVisitQuery(query, null, null, true);
             }
 
             return null;
@@ -102,7 +102,7 @@ namespace TxtAlert.API.Controllers
                                     Visit";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteVisitQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo, false);
             }
 
             return null;
@@ -126,7 +126,7 @@ namespace TxtAlert.API.Controllers
                                     Visit";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteVisitQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo, false);
             }
 
             return null;
@@ -162,7 +162,7 @@ namespace TxtAlert.API.Controllers
                                     Visit";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteVisitQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo, false);
             }
 
             return null;
@@ -188,7 +188,7 @@ namespace TxtAlert.API.Controllers
                                     Visit";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteVisitQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo, false);
             }
 
             return null;
@@ -215,7 +215,7 @@ namespace TxtAlert.API.Controllers
                                     Next_tcb DESC";
 
                 string query = GenerateQuery(filter, order);
-                return ExecuteVisitQuery(query, dateFrom, dateTo);
+                return ExecuteVisitQuery(query, dateFrom, dateTo, false);
             }
 
             return null;
@@ -247,7 +247,7 @@ namespace TxtAlert.API.Controllers
                                 Ptd_No,
                                 File_No,
                                 Cellphone_number,
-                                '" + tables[index].Clinic + @"' AS [Facility_name] 
+                                '" + tables[index].Clinic + @"' AS Facility_name
                              FROM " + tables[index].View;
 
             return query;
@@ -330,12 +330,12 @@ namespace TxtAlert.API.Controllers
                 // Some  queries have two between statements
                 if (dateFrom.HasValue)
                 {
-                    cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+                    cmd.Parameters.AddWithValue("@dateFrom2", dateFrom);
                 }
 
                 if (dateTo.HasValue)
                 {
-                    cmd.Parameters.AddWithValue("@dateTo", dateTo);
+                    cmd.Parameters.AddWithValue("@dateTo2", dateTo);
                 }
 
                 MySqlDataAdapter adap = new MySqlDataAdapter(cmd);
@@ -403,7 +403,7 @@ namespace TxtAlert.API.Controllers
             return dt;
         }
 
-        private IEnumerable<Appad> ExecuteVisitQuery(string query, string dateFrom, string dateTo)
+        private IEnumerable<Appad> ExecuteVisitQuery(string query, string dateFrom, string dateTo, bool getAll)
         {
             NameValueCollection appSettings = ConfigurationManager.AppSettings;
             DataSet ds;
@@ -411,7 +411,8 @@ namespace TxtAlert.API.Controllers
             DateTime? dFrom = ConstructDate(dateFrom);
             DateTime? dTo = ConstructDate(dateTo, true);
 
-            if(!dFrom.HasValue || !dTo.HasValue)
+            
+            if((!dFrom.HasValue || !dTo.HasValue) && !getAll)
             {
                 return new List<Appad>().AsEnumerable();
             }
