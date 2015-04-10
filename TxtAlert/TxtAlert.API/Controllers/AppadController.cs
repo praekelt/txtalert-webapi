@@ -99,7 +99,7 @@ namespace TxtAlert.API.Controllers
                                        )";
                 string order = @" ORDER BY 
                                     Ptd_No, 
-                                    Visit";
+                                    Visit_date";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteVisitQuery(query, dateFrom, dateTo, false);
@@ -123,7 +123,7 @@ namespace TxtAlert.API.Controllers
                                                @dateTo";
                 string order = @" ORDER BY
                                     Ptd_No, 
-                                    Visit";
+                                    Visit_date";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteVisitQuery(query, dateFrom, dateTo, false);
@@ -159,7 +159,7 @@ namespace TxtAlert.API.Controllers
                                        )";
                 string order = @" ORDER BY
                                     Ptd_No, 
-                                    Visit";
+                                    Visit_date";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteVisitQuery(query, dateFrom, dateTo, false);
@@ -185,7 +185,7 @@ namespace TxtAlert.API.Controllers
                                                @dateTo";
                 string order = @" ORDER BY 
                                     Ptd_No, 
-                                    Visit";
+                                    Visit_date";
 
                 string query = GenerateQuery(filter, order);
                 return ExecuteVisitQuery(query, dateFrom, dateTo, false);
@@ -425,7 +425,6 @@ namespace TxtAlert.API.Controllers
             IEnumerable<Appad> results = ds.Tables[0].AsEnumerable().Select(x => new Appad
             {
                 Ptd_No = (x.Table.Columns.Contains("Ptd_No") ? x.Field<string>("Ptd_No") : null),
-                Visit = (x.Table.Columns.Contains("Visit") ? x.Field<double?>("Visit") : null),
                 Return_date = (x.Table.Columns.Contains("Return_date") ? x.Field<DateTime?>("Return_date") : null),
                 Visit_date = (x.Table.Columns.Contains("Visit_date") ? x.Field<DateTime?>("Visit_date") : null),
                 Status = (x.Table.Columns.Contains("Status") ? x.Field<string>("Status") : null),
